@@ -18,7 +18,7 @@ template_uc = template_unit_commitment(network=NetworkModel(CopperPlatePowerMode
 solver = optimizer_with_attributes(Gurobi.Optimizer)
 set_optimizer_attribute(solver, "MIPGap", 0.5)
 
-problem = DecisionModel(template_uc, sys; optimizer = solver, name = "UC")
+problem = DecisionModel(template_uc, sys; optimizer = solver, name = "UC", store_variable_names=true)
 
 models = SimulationModels(;
     decision_models = [problem],
