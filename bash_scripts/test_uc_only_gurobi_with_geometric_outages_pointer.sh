@@ -2,8 +2,8 @@
 
 #SBATCH --account=ucb678_asc1
 #SBATCH --partition=amilan
-#SBATCH --job-name=example-job
-#SBATCH --output=out/example-job.%j.out
+#SBATCH --job-name=test-uc-geo-outages
+#SBATCH --output=out/test-uc-geo-outages.%j.out
 #SBATCH --time=24:00:00
 #SBATCH --qos=normal
 #SBATCH --nodes=1
@@ -12,4 +12,4 @@
 #SBATCH --mail-user=emco4286@colorado.edu
 
 cd /projects/emco4286/software/julia
-/curc/sw/julia/1.10.2/bin/julia "/home/emco4286/ercot-sienna/batch_scripts/test_uc_only.jl"
+/curc/sw/julia/1.10.2/bin/julia /home/emco4286/ercot-sienna/batch_scripts/test_uc_only_gurobi_with_geometric_outages.jl
