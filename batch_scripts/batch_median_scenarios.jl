@@ -8,15 +8,12 @@ const IS = InfrastructureSystems
 
 using Gurobi, JuMP
 
-using CSV, DataFrames, Dates, TimeSeries, DataStructures, JSON, Plots, Random, Glob, Printf, Base.Iterators
-
-using Statistics, Distributions
+using CSV, DataFrames, Dates, TimeSeries, DataStructures, JSON, Random, Glob, Printf, Base.Iterators, ArgParse
 
 file_dir = joinpath("/projects", "emco4286", "data", "sienna_data", "input", "DA_sys", "final_sys_DA.json")
 sys = System(file_dir)
 
-scenario = JSON.parsefile(joinpath("/projects", "emco4286", "data", "scenarios", "medians_1.json"))
-
+# This is all to get the timestamps for the data used in this system
 fs_table = PSY.get_forecast_summary_table(sys)
 it = DateTime(fs_table[1, :initial_timestamp])
 resolution = convert(Hour, fs_table[1, :resolution])
@@ -25,14 +22,19 @@ num_intervals = fs_table[1, :window_count]
 ft = it .+ convert(Day, intervals) .* num_intervals
 ts_timestamps = collect(StepRange(it, resolution, ft))
 
-global av_data = TimeSeries.TimeArray(ts_timestamps, zeros(length(ts_timestamps)))
-global total_capacity = 0
+# Use argument to pick scenario
+num = parse(Int32, ARGS[1])
+fname = @sprintf("medians_%s.json", num)
+mydir = joinpath("/projects", "emco4286", "data", "scenarios", "median", fname)
+scenario = JSON.parsefile(mydir)
+
+av_data = Any[]
+total_capacity = Any[]
+
+# Assign outage trajectories to generators
 
 for k1 in collect(keys(scenario))
     for k2 in collect(keys(scenario[k1]))
-
-        global av_data
-        global total_capacity
 
         gen = get_component(ThermalMultiStart, sys, k2)
 
@@ -56,39 +58,35 @@ for k1 in collect(keys(scenario))
             break
         end
 
+        # Store timeseries availability data
         ts = get_supplemental_attributes(gen)[1]
         my_time_series = get_time_series_array(SingleTimeSeries, ts, "availability")
-        av_data = av_data .+ (my_time_series .* get_rating(gen))
-        total_capacity += get_rating(gen)
+        push!(av_data, my_time_series.*(get_rating(gen)*get_base_power(gen)))
+        push!(total_capacity, get_rating(gen)*get_base_power(gen))
 
     end
 end
 
-# save capacity TS
+# Save timeseries availability data
+new_array = reduce((x, y) -> x .+ y,  av_data)
+out = values(new_array) ./ sum(total_capacity)
 
-save_dir = joinpath("/projects", "emco4286", "data", "available_capacity", "medians", "ts_1.csv" )
-CSV.write(save_dir, av_data ./ total_capacity)
+fname = @sprintf("medians_%s.csv", num)
+save_dir = joinpath("/projects", "emco4286", "data", "available_capacity", "medians", fname)
+CSV.write(save_dir, out)
 
 # 48 hour horizon, 24 hour interval
 PSY.transform_single_time_series!(sys, Hour(48), Hour(24))
 
 template_uc = template_unit_commitment(network=NetworkModel(CopperPlatePowerModel))
 
-set_device_model!(template_uc, Line, StaticBranch)
-set_device_model!(template_uc, Transformer2W, StaticBranch)
-set_device_model!(template_uc, TapTransformer, StaticBranch)
-set_device_model!(template_uc, ThermalMultiStart, ThermalMultiStartUnitCommitment)
+set_device_model!(template_uc, ThermalMultiStart, ThermalStandardUnitCommitment)
 set_device_model!(template_uc, ThermalStandard, ThermalStandardUnitCommitment)
-set_device_model!(template_uc, RenewableDispatch, RenewableFullDispatch)
-set_device_model!(template_uc, PowerLoad, StaticPowerLoad)
-set_device_model!(template_uc, HydroDispatch, HydroDispatchRunOfRiver)
-set_device_model!(template_uc, RenewableNonDispatch, FixedOutput)
 
-solver = optimizer_with_attributes(Gurobi.Optimizer)
+solver = PSI.optimizer_with_attributes(Gurobi.Optimizer)
 set_optimizer_attribute(solver, "MIPGap", 0.5)
 
 problem = DecisionModel(template_uc, sys; optimizer = solver, name = "UC")
-
 
 models = SimulationModels(;
     decision_models = [problem],
@@ -99,10 +97,12 @@ sequence = SimulationSequence(;
     ini_cond_chronology = InterProblemChronology(),
 )
 
+# Build simulation
 output_dir = joinpath("/projects", "emco4286", "data", "sienna_data", "output", "ercot", "scenarios")
+fname = @sprintf("medians_%s", num)
 
 sim = Simulation(;
-    name = "medians_1",
+    name = fname,
     steps = 365,
     models = models,
     sequence = sequence,
