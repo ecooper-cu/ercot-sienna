@@ -1,14 +1,13 @@
-using Pkg
-Pkg.activate("/projects/emco4286/software/julia/MyProject")
+using Pkg; Pkg.activate("/projects/emco4286/software/julia/MyProject")
 
 using ClusterManagers, Distributed
 
 # https://discourse.julialang.org/t/packages-arent-found-on-worker-processors/46820/10
-addprocs(SlurmManager(8), topology=:master_worker, exeflags="--project", dir="/projects/emco4286/software/julia/MyProject")
+addprocs(3) #, dir="/home/emco4286/tmp", exeflags="--output-file=worker_output_$(myid()).log") #SlurmManager(8), topology=:master_worker, exeflags="--project", dir="/projects/emco4286/software/julia/MyProject")
 
 @everywhere begin
     using Pkg
-    # Pkg.activate("/projects/emco4286/software/julia/MyProject")
+    Pkg.activate("/projects/emco4286/software/julia/MyProject")
     # Pkg.activate("/projects/emco4286/software/julia/PowerSystems")
     # Pkg.activate("/projects/emco4286/software/julia/PowerSimulations")
     # Pkg.activate("/projects/emco4286/software/julia/HydroPowerSimulations")
