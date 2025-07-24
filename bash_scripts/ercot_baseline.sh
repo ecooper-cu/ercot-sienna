@@ -1,13 +1,13 @@
 #!/bin/bash
 
 #SBATCH --account=ucb678_asc1
-#SBATCH --partition=amilan
-#SBATCH --job-name=example-job
-#SBATCH --output=out/ercot_pcm/%j.out
-#SBATCH --time=24:00:00
-#SBATCH --qos=normal
+#SBATCH --partition=amem
+#SBATCH --job-name=baseline
+#SBATCH --output=out/baseline.%j.out
+#SBATCH --time=4:00:00
+#SBATCH --qos=mem
 #SBATCH --nodes=1
-#SBATCH --ntasks=5
+#SBATCH --mem=256G
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=emco4286@colorado.edu
 

@@ -23,7 +23,7 @@ PSI.set_device_model!(template_uc, ThermalMultiStart, ThermalStandardUnitCommitm
 PSI.set_device_model!(template_uc, ThermalStandard, ThermalStandardUnitCommitment)
 
 solver = PSI.optimizer_with_attributes(Gurobi.Optimizer)
-set_optimizer_attribute(solver, "MIPGap", 0.5)
+set_optimizer_attribute(solver, "MIPGap", 0.05)
 
 output_dir = joinpath("/projects", "emco4286", "data", "sienna_data", "output", "ercot", "baseline")
 

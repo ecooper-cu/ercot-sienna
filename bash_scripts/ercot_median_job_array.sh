@@ -2,15 +2,12 @@
 
 #SBATCH --account=ucb678_asc1
 #SBATCH --partition=amem
-#SBATCH --job-name=median-$SLURM_ARRAY_TASK_ID
-#SBATCH --output=out/medians/$SLURM_ARRAY_TASK_ID.out
+#SBATCH --job-name=medians
+#SBATCH --output=out/medians/%a.out
 #SBATCH --time=4:00:00
 #SBATCH --qos=mem
 #SBATCH --mem=256G
-
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
-
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=emco4286@colorado.edu
 

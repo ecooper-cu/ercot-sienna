@@ -24,8 +24,8 @@ ts_timestamps = collect(StepRange(it, resolution, ft))
 
 # Use argument to pick scenario
 num = parse(Int32, ARGS[1])
-fname = @sprintf("medians_%s.json", num)
-mydir = joinpath("/projects", "emco4286", "data", "scenarios", "median", fname)
+fname = @sprintf("lo_%s.json", num)
+mydir = joinpath("/projects", "emco4286", "data", "scenarios", "lower_quantile", fname)
 scenario = JSON.parsefile(mydir)
 
 av_data = Any[]
@@ -71,8 +71,8 @@ end
 new_array = reduce((x, y) -> x .+ y,  av_data)
 out = values(new_array) ./ sum(total_capacity)
 
-fname = @sprintf("medians_%s.csv", num)
-save_dir = joinpath("/projects", "emco4286", "data", "available_capacity", "medians", fname)
+fname = @sprintf("lo_%s.csv", num)
+save_dir = joinpath("/projects", "emco4286", "data", "available_capacity", "lower_quantile", fname)
 CSV.write(save_dir, DataFrame(data=out))
 
 # 48 hour horizon, 24 hour interval
@@ -99,7 +99,7 @@ sequence = SimulationSequence(;
 
 # Build simulation
 output_dir = joinpath("/projects", "emco4286", "data", "sienna_data", "output", "ercot", "scenarios")
-fname = @sprintf("medians_%s", num)
+fname = @sprintf("lo_%s", num)
 
 sim = Simulation(;
     name = fname,
